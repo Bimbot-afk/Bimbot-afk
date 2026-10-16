@@ -41,13 +41,13 @@
 
 <br clear="both">
 
-<img data-importer="snake" src="https://raw.githubusercontent.com/Bimbot-afk/Bimbot-afk/snake-output/snake.svg?v=2" alt="Snake animation" />
+<img data-importer="snake" src="https://raw.githubusercontent.com/Bimbot-afk/Bimbot-afk/snake-output/snake.svg?v=3" alt="Snake animation" />
 
 ###
 
 <div data-importer="stats" align="center">
-  <img src="https://raw.githubusercontent.com/Bimbot-afk/Bimbot-afk/stats-output/stats.svg?v=2" height="150" alt="stats graph"  />
-  <img src="https://raw.githubusercontent.com/Bimbot-afk/Bimbot-afk/languages-output/languages.svg?v=2" height="150" alt="languages graph"  />
+  <img src="https://raw.githubusercontent.com/Bimbot-afk/Bimbot-afk/stats-output/stats.svg?v=3" height="150" alt="stats graph"  />
+  <img src="https://raw.githubusercontent.com/Bimbot-afk/Bimbot-afk/languages-output/languages.svg?v=3" height="150" alt="languages graph"  />
 </div>
 
 ###

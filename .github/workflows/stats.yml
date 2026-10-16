@@ -18,13 +18,88 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - name: generate stats.svg
-        uses: readme-tools/github-readme-stats-action@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          card: stats
-          options: username=${{ github.repository_owner }}&hide_title=false&hide_rank=false&show_icons=true&include_all_commits=false&disable_animations=false&theme=dracula&locale=en&hide_border=false
-          path: dist/stats.svg
-          token: ${{ secrets.GITHUB_TOKEN }}
+          node-version: "20"
+
+      - name: generate stats.svg
+        env:
+          USERNAME: ${{ github.repository_owner }}
+        run: |
+          npm install --no-save github:stats-organization/github-readme-stats
+          node --input-type=module << 'EOF'
+          import { mkdir, writeFile } from "node:fs/promises";
+          import { renderStatsCard } from "github-readme-stats/src/cards/stats.js";
+          import { calculateRank } from "github-readme-stats/src/calculateRank.js";
+
+          const username = process.env.USERNAME;
+          const headers = {
+            "User-Agent": "github-readme-stats-workflow",
+            "Accept": "application/vnd.github+json",
+          };
+
+          const getJson = async (url, extraHeaders = {}) => {
+            const res = await fetch(url, { headers: { ...headers, ...extraHeaders } });
+            if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+            return res.json();
+          };
+
+          const user = await getJson(`https://api.github.com/users/${username}`);
+          const repos = await getJson(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`);
+          const commits = await getJson(
+            `https://api.github.com/search/commits?q=author:${username}`,
+            { Accept: "application/vnd.github.cloak-preview+json" }
+          );
+          const prs = await getJson(`https://api.github.com/search/issues?q=author:${username}+type:pr`);
+          const issues = await getJson(`https://api.github.com/search/issues?q=author:${username}+type:issue`);
+
+          const totalStars = Array.isArray(repos)
+            ? repos.reduce((sum, r) => sum + (r.stargazers_count || 0), 0)
+            : 0;
+          const totalCommits = commits.total_count || 0;
+          const totalPRs = prs.total_count || 0;
+          const totalIssues = issues.total_count || 0;
+
+          const stats = {
+            name: user.name || user.login || username,
+            totalPRs,
+            totalPRsMerged: 0,
+            mergedPRsPercentage: 0,
+            totalReviews: 0,
+            totalCommits,
+            totalIssues,
+            totalStars,
+            totalDiscussionsStarted: 0,
+            totalDiscussionsAnswered: 0,
+            contributedTo: 0,
+            rank: calculateRank({
+              all_commits: true,
+              commits: totalCommits,
+              prs: totalPRs,
+              reviews: 0,
+              issues: totalIssues,
+              repos: user.public_repos || 0,
+              stars: totalStars,
+              followers: user.followers || 0,
+            }),
+          };
+
+          const svg = renderStatsCard(stats, {
+            hide: [],
+            show_icons: true,
+            hide_title: false,
+            hide_border: false,
+            hide_rank: false,
+            include_all_commits: true,
+            disable_animations: false,
+            theme: "dracula",
+            locale: "en",
+          });
+
+          await mkdir("dist", { recursive: true });
+          await writeFile("dist/stats.svg", svg, "utf8");
+          EOF
 
 
       - name: push stats.svg to the output branch
